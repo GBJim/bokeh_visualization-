@@ -1,6 +1,3 @@
-###
-### NOTE: This exercise requires a network connection
-###
 
 import numpy as np
 import pandas as pd
@@ -11,64 +8,69 @@ import datetime
 
 
 def dateCount(collection):
-    client = MongoClient('localhost', 27017)
+    client = MongoClient('140.114.77.18', 27017)
     collection = client['idea'][collection]
     dateCount ={}
     for tweet in collection.find():
         date =  np.datetime64(tweet["created_at"].date().strftime("%Y-%m-%d"))
         dateCount[date] = dateCount.get(date,0) + 1
-    return pd.DataFrame(list(dateCount.items()))
-
-
-
-
-
-
-
-
+    return pd.DataFrame(list(dateCount.items())).sort([0])
 
 
 # Here is some code to read in some stock data from the Yahoo Finance API
 
-tweetsDate = dateCount('BDP_emotion')
-tweetsDate = tweetsDate.sort([0])
+BPD_tweets = dateCount('BDP_emotion')
 
-AAPL = pd.read_csv(
-    "http://ichart.yahoo.com/table.csv?s=AAPL&a=0&b=1&c=2000&d=0&e=1&f=2010",
-    parse_dates=['Date'])
-MSFT = pd.read_csv(
-    "http://ichart.yahoo.com/table.csv?s=MSFT&a=0&b=1&c=2000&d=0&e=1&f=2010",
-    parse_dates=['Date'])
-IBM = pd.read_csv(
-    "http://ichart.yahoo.com/table.csv?s=IBM&a=0&b=1&c=2000&d=0&e=1&f=2010",
-    parse_dates=['Date'])
 
-output_file("stocks.html", title="stocks.py example")
+regular_tweets = dateCount('regularUser_en')
+
+output_file("tweets_distribution.html", title="Tweets Distribution")
 
 # create a figure
-p1 = figure(title="Stocks",
+p1 = figure(title="Tweets",
             x_axis_label="Date",
-            y_axis_label="Close price",
+            y_axis_label="Post Count",
             x_axis_type="datetime")
 
+p2 = figure(title="Tweets",
+            x_axis_label="Date",
+            y_axis_label="Post Count",
+            x_axis_type="datetime")
 
 p1.below[0].formatter.formats = dict(years=['%Y'],
                                      months=['%b %Y'],
                                      days=['%d %b %Y'])
 
+
+p2.below[0].formatter.formats = dict(years=['%Y'],
+                         months=['%b %Y'],
+                         days=['%d %b %Y'])
+
 # EXERCISE: finish this line plot, and add more for the other stocks. Each one should
 # have a legend, and its own color.
 p1.line(
-    tweetsDate [0],                                       # x coordinates
-    tweetsDate [1],                                  # y coordinates
+    BPD_tweets[0],                                       # x coordinates
+    BPD_tweets[1],                                  # y coordinates
     color='#A6CEE3',                                    # set a color for the line
-    legend='AAPL',                                      # attach a legend label
+    legend='BPD People',                                      # attach a legend label
+)
+
+p2.line(
+    regular_tweets[0],                                       # x coordinates
+    regular_tweets[1],                                  # y coordinates
+    color='#E09926',                                    # set a color for the line
+    legend='Regular People',                                      # attach a legend label
 )
 
 
+
+
 # EXERCISE: style the plot, set a title, lighten the gridlines, etc.
-p1.title = "Stock Closing Prices"
+p1.title = "BDP Tweets along with Time"
 p1.grid.grid_line_alpha=0.3
+
+p2.title = "Regular Tweets along with Time"
+p2.grid.grid_line_alpha=0.3
 
 # EXERCISE: start a new figure
 
@@ -81,4 +83,4 @@ window = np.ones(window_size)/float(window_size)
 # EXERCISE: plot a scatter of circles for the individual AAPL prices with legend
 
 
-show(VBox(p1))  # open a browser
+show(VBox(p1,p2))  # open a browser
